@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# 经过 pre-commit 后，通过 commitlint 对提交的信息进行检查
+npx --no-install commitlint --edit "$1"
