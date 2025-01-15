@@ -3,6 +3,9 @@ import { axiosRequest } from '@/api/http/index'
 import { useUserStoreHook } from '@/stores/modules/user'
 import NProgress from '@/utils/progress'
 
+// 与后端约定的请求成功码
+const SUCCESS_CODE = 2000
+
 export function customInterceptorHooks(): InterceptorHooks {
   return {
     requestInterceptor(config) {
@@ -50,8 +53,7 @@ export function customInterceptorHooks(): InterceptorHooks {
 
       if (res.status !== 200)
         return Promise.reject(res)
-      // 与后端约定的请求成功码
-      const SUCCESS_CODE = 200
+
       // 在下载文件时，code 不存在，但是应该直接放行，让其完成下载
       if (res.data.code && res.data.code !== SUCCESS_CODE) {
         // 所以这里只判断存在 code 且不对应设置的成功码 的时候
@@ -83,14 +85,14 @@ export function customInterceptorHooks(): InterceptorHooks {
         [404, '请求地址有误'],
         [500, '服务器出错'],
       ])
-      const message = (err.response && mapErrorStatus.get(err.response.status)) || '请求出错，请稍后再试'
+      const message = (err.response && mapErrorStatus.get(err.response.status)) || err.response?.data?.message || '请求出错，请稍后再试'
       if (err.config.requestOptions?.globalErrorMessage) {
         // 这里全局提示错误
         console.error('响应异常：', message)
         err.config.requestOptions?.globalErrorMessageHandle
         && err.config.requestOptions?.globalErrorMessageHandle(message)
       }
-      return Promise.reject(err.response)
+      return Promise.reject(err.response.data)
     },
   }
 }

@@ -5,7 +5,6 @@ import { ElMessage } from 'element-plus'
 
 // 具体使用时先实例一个请求对象
 export const axiosRequest = new AxiosRequestExt({
-  // baseURL: '/api',
   timeout: 30000,
   headers: {
     'Content-Type': 'application/x-www-form-urlencoded',
@@ -13,9 +12,9 @@ export const axiosRequest = new AxiosRequestExt({
   requestOptions: {
     globalSuccessMessage: false,
     globalErrorMessage: true,
-    globalErrorMessageHandle: (val: string) => {
+    globalErrorMessageHandle: (errorMessage?: string) => {
       ElMessage.error({
-        message: val,
+        message: errorMessage || '未知错误',
       })
     },
   },

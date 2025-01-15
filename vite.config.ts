@@ -23,9 +23,20 @@ export default defineConfig(({ mode }) => {
       port: 12999,
       open: false,
       proxy: {
-        '/api': {
-          // target: env.VITE_PROXY_BASE_URL,
+        [env.VITE_APP_STORE_API_PREFIX]: {
+          target: env.VITE_APP_STORE_URL,
           changeOrigin: true,
+          rewrite: path => path.replace(new RegExp(`^${env.VITE_APP_STORE_API_PREFIX}`), ''),
+        },
+        [env.VITE_MT_SHOP_STATIC_API_PREFIX]: {
+          target: env.VITE_MT_SHOP_STATIC_URL,
+          changeOrigin: true,
+          rewrite: path => path.replace(new RegExp(`^${env.VITE_MT_SHOP_STATIC_API_PREFIX}`), ''),
+        },
+        [env.VITE_MT_APP_API_PREFIX]: {
+          target: env.VITE_MT_APP_API_URL,
+          changeOrigin: true,
+          rewrite: path => path.replace(new RegExp(`^${env.VITE_MT_APP_API_PREFIX}`), ''),
         },
       },
     },
@@ -58,7 +69,7 @@ export default defineConfig(({ mode }) => {
           ElementPlusResolver(),
         ],
         // 用于 TS
-        dts: path.resolve(pathSrc, 'typings', 'auto-imports.d.ts'),
+        dts: path.resolve(pathSrc, 'types', 'auto-imports.d.ts'),
         vueTemplate: true,
       }),
       // 自动导入组件，可以在模板中直接写组件，不用 import
@@ -81,7 +92,7 @@ export default defineConfig(({ mode }) => {
             },
           ),
         ],
-        dts: path.resolve(pathSrc, 'typings', 'components.d.ts'),
+        dts: path.resolve(pathSrc, 'types', 'components.d.ts'),
       }),
       Icons({
         autoInstall: true,
