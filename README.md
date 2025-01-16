@@ -18,6 +18,14 @@ iMoutaiEnvGenerator 是一个专为 [ken-iMoutai-Script](https://github.com/Aken
 ![首页界面](./src/assets/md/step-1.png)
 ![配置示例](./src/assets/md/step-final.png)
 
+## 推荐 Docker 一行命令部署
+
+部署成功后，访问 `http://localhost:12999` 即可使用。
+
+```
+docker run -d --name imoutai-env-generator -p 12999:12999 ppken/imaotai-env-generator
+```
+
 ## 本地使用方法
 
 1. **拉取代码并启动项目**：
@@ -52,7 +60,7 @@ iMoutaiEnvGenerator 是一个专为 [ken-iMoutai-Script](https://github.com/Aken
 <!-- 构建镜像 -->
 docker build -t imaotai-env-generator .
 <!-- 启动容器 -->
-docker run -d --name imoutai-env-generator -p 12999:12999 imoutai-env-generator
+docker run -d --name imaotai-env-generator -p 12999:12999 imaotai-env-generator
 ```
 
 ## 注意事项
