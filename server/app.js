@@ -1,8 +1,11 @@
-const process = require('node:process')
-const express = require('express')
-const { createProxyMiddleware } = require('http-proxy-middleware')
+import process from 'node:process'
+import express from 'express'
+import { createProxyMiddleware } from 'http-proxy-middleware'
 
 const app = express()
+
+// 添加静态文件服务
+app.use(express.static('dist'))
 
 // 环境变量
 const env = {
@@ -13,8 +16,6 @@ const env = {
   VITE_MT_APP_API_PREFIX: '/mtappapi',
   VITE_MT_APP_API_URL: 'https://app.moutai519.com.cn',
 }
-
-// app.use(express.static('dist')); // 假设你的 Vite 构建输出在 dist 目录, 按需修改
 
 // 配置代理
 app.use(

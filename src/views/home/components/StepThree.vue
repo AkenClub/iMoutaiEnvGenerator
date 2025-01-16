@@ -3,6 +3,7 @@ import { login, sendVerifyCode } from '@/api/imaotai/user'
 import { getMtAppVersion } from '@/api/other/apple.ts'
 import { useImaotaiStore } from '@/stores/modules/imaotai'
 import { ElMessage } from 'element-plus'
+import { v4 as uuidv4 } from 'uuid'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 interface Props {
@@ -42,7 +43,7 @@ function generateDeviceId() {
     ElMessage.warning('已发送验证码，不能修改设备ID和手机号码，如需修改，请刷新页面重新配置')
     return
   }
-  deviceId.value = crypto.randomUUID()
+  deviceId.value = uuidv4()
 }
 
 // 开始倒计时
