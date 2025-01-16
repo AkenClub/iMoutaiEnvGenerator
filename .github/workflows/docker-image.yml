@@ -3,18 +3,23 @@ name: Docker Image CI
 on:
   push:
     tags:
-      - 'v*.*.*' # 匹配语义化版本的tag，如 v1.0.0
+      - 'v*.*.*'
+  workflow_dispatch: # 手动触发
 
 env:
   REGISTRY: docker.io
   IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/imaotai-env-generator
 
+# 添加权限控制
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   build:
+    # 添加权限检查
+    if: github.actor == 'AkenClub' # 替换成你的 GitHub 用户名
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
 
     steps:
       - name: Checkout repository
