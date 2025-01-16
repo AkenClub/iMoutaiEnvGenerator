@@ -18,7 +18,7 @@ iMoutaiEnvGenerator 是一个专为 [ken-iMoutai-Script](https://github.com/Aken
 ![首页界面](./src/assets/md/step-1.png)
 ![配置示例](./src/assets/md/step-final.png)
 
-## 使用方法
+## 本地使用方法
 
 1. **拉取代码并启动项目**：
 
@@ -44,13 +44,25 @@ iMoutaiEnvGenerator 是一个专为 [ken-iMoutai-Script](https://github.com/Aken
    - 登录青龙面板，进入环境变量配置页面。
    - 新增变量 `KEN_IMAOTAI_ENV`，将生成的字符串粘贴进去，保存即可。
 
+## Docker 构建使用方法
+
+直接集成了前后端，直接启动即可。前端地址为 `http://localhost:12999`。
+
+```
+<!-- 构建镜像 -->
+docker build -t imaotai-env-generator .
+<!-- 启动容器 -->
+docker run -d --name imoutai-env-generator -p 12999:12999 imoutai-env-generator
+```
+
 ## 注意事项
 
 1. **关于 User-Agent 设置问题**
    - 现象：浏览器控制台可能出现 `Refused to set unsafe header "User-Agent"` 警告。
    - 原因：这是由浏览器的安全策略导致的，前端无法直接修改某些保护的请求头，前端的 axios 配置的 User-Agent 会被浏览器忽略。
    - 解决方案：
-     - 使用 node 启动项目，入口文件为 `server/app.js`。先执行打包命令 `yarn build`，生成 `dist` 目录。放开 `app.use(express.static('dist'));` 注释，然后执行 `node server/app.js` 启动项目。
+     - 推荐使用上述 Docker 构建。
+     - 也可自行使用 node 启动项目，入口文件为 `server/app.js`。先执行打包命令 `yarn build`，生成 `dist` 目录，然后执行 `node server/app.js` 启动项目。
      - 此警告不会影响程序正常运行，可以忽略，但是为了避免在茅台 APP 接口中出现浏览器的 UA，建议在 `server/app.js` 中设置 User-Agent。
 
 ## 免责声明
