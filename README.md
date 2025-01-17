@@ -15,8 +15,17 @@ iMoutaiEnvGenerator 是一个专为 [ken-iMoutai-Script](https://github.com/Aken
 
 ## 使用截图
 
-![首页界面](./src/assets/md/step-1.png)
-![配置示例](./src/assets/md/step-final.png)
+![首页](./src/assets/md/img_home.png)
+
+<details>
+
+<summary>更多截图</summary>
+
+![新环境变量生成](./src/assets/md/img_generate-step-1.png)
+![新环境变量生成](./src/assets/md/img_generate-step-final.png)
+![更新旧环境变量](./src/assets/md/img_update.png)
+
+</details>
 
 ## 推荐 Docker 一行命令部署
 
