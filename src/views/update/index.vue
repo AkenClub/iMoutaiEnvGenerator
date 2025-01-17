@@ -242,7 +242,7 @@ function handleReset() {
 
 <template>
   <div class="h-screen p-4">
-    <el-card class="flex flex-col h-full" body-style="overflow-y: auto;">
+    <el-card class="flex flex-col h-full max-w-[940px] mx-auto" body-style="overflow-y: auto;">
       <template #header>
         <CommonHeader title="更新已有环境变量" description="导入并更新现有的环境变量，快速修改配置信息。" />
       </template>

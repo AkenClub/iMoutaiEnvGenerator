@@ -11,7 +11,7 @@ function handleNavigate(path: string) {
 
 <template>
   <div class="h-screen p-4">
-    <el-card class="flex flex-col h-full" body-style="overflow-y: auto;">
+    <el-card class="flex flex-col h-full max-w-[940px] mx-auto" body-style="overflow-y: auto;">
       <template #header>
         <CommonHeader />
       </template>

@@ -115,11 +115,21 @@ function handleReset() {
     window.location.reload()
   })
 }
+
+// 添加 ref 和监听逻辑
+const stepThreeRef = ref()
+
+// 监听 activeStep
+watch(activeStep, (newValue) => {
+  if (stepThreeRef.value) {
+    stepThreeRef.value.isVisible = newValue === 2
+  }
+})
 </script>
 
 <template>
   <div class="h-screen p-4">
-    <el-card class="flex flex-col h-full" body-style="overflow-y: auto;">
+    <el-card class="flex flex-col h-full max-w-[940px] mx-auto" body-style="overflow-y: auto;">
       <!-- 卡片头部 -->
       <template #header>
         <CommonHeader
@@ -153,6 +163,7 @@ function handleReset() {
 
       <StepThree
         v-show="activeStep === 2"
+        ref="stepThreeRef"
         v-model:loading="loading"
       />
 

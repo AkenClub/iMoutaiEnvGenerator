@@ -4,7 +4,7 @@ import { getMtAppVersion } from '@/api/other/apple.ts'
 import { useImaotaiStore } from '@/stores/modules/imaotai'
 import { ElMessage } from 'element-plus'
 import { v4 as uuidv4 } from 'uuid'
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
 
 interface Props {
   loading?: boolean
@@ -141,10 +141,17 @@ async function handleLogin() {
   }
 }
 
-// 组件加载时获取版本号和生成设备ID
-onMounted(() => {
-  fetchMtVersion()
-  generateDeviceId()
+// 监听组件是否显示
+const isVisible = ref(false)
+defineExpose({
+  isVisible,
+})
+
+watch(isVisible, (newValue) => {
+  if (newValue) {
+    fetchMtVersion()
+    generateDeviceId()
+  }
 })
 
 // 在组件卸载时清理定时器
