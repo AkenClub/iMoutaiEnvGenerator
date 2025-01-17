@@ -46,14 +46,6 @@ function copyText(text: string) {
           <div class="font-bold">
             名称：
           </div>
-          <el-button
-            type="primary"
-            :disabled="!editingName"
-            size="small"
-            @click="() => copyText(editingName)"
-          >
-            复制
-          </el-button>
         </div>
         <el-button
           type="primary"
@@ -70,6 +62,14 @@ function copyText(text: string) {
           :disabled="!editMode.name"
         />
       </div>
+      <el-button
+        type="success"
+        class="mt-2 w-full"
+        :disabled="!editingName"
+        @click="() => copyText(editingName)"
+      >
+        复制
+      </el-button>
     </div>
 
     <!-- 自动拆分 -->
@@ -89,14 +89,6 @@ function copyText(text: string) {
           <div class="font-bold">
             值：
           </div>
-          <el-button
-            type="primary"
-            :disabled="!editingValue"
-            size="small"
-            @click="() => copyText(editingValue)"
-          >
-            复制
-          </el-button>
         </div>
         <el-button
           type="primary"
@@ -115,6 +107,14 @@ function copyText(text: string) {
           :rows="6"
         />
       </div>
+      <el-button
+        type="success"
+        class="mt-2 w-full"
+        :disabled="!editingValue"
+        @click="() => copyText(editingValue)"
+      >
+        复制
+      </el-button>
     </div>
 
     <!-- 预览信息 -->
@@ -136,13 +136,13 @@ function copyText(text: string) {
         <div>经度 (LNG)：{{ imaotaiStore.state.lng }}</div>
         <div class="group">
           <div>TOKEN：</div>
-          <div class="pl-4 break-all text-gray-600">
+          <div class="break-all text-gray-600 bg-white p-2 rounded text-sm font-mono">
             {{ imaotaiStore.state.token }}
           </div>
         </div>
         <div class="group">
           <div>COOKIE：</div>
-          <div class="pl-4 break-all text-gray-600">
+          <div class="break-all text-gray-600 bg-white p-2 rounded text-sm font-mono">
             {{ imaotaiStore.state.cookie }}
           </div>
         </div>

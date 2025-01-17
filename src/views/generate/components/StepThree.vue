@@ -256,13 +256,13 @@ onUnmounted(() => {
           <div class="space-y-1">
             <div class="group">
               <div>TOKEN：</div>
-              <div class="pl-4 break-all text-gray-600">
+              <div class="break-all text-gray-600 bg-white p-2 rounded text-sm font-mono">
                 {{ imaotaiStore.state.token }}
               </div>
             </div>
             <div class="group">
               <div>COOKIE：</div>
-              <div class="pl-4 break-all text-gray-600">
+              <div class="break-all text-gray-600 bg-white p-2 rounded text-sm font-mono">
                 {{ imaotaiStore.state.cookie }}
               </div>
             </div>

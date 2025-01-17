@@ -64,8 +64,8 @@ async function handleGetProducts() {
 
 // 下一步
 function handleNext() {
-  if (activeStep.value === 0 && (!selectedShopId.value || !imaotaiStore.state.shopMode)) {
-    ElMessage.warning('请选择商店和缺货模式')
+  if (activeStep.value === 0 && (!selectedShopId.value)) {
+    ElMessage.warning('请选择商店')
     return
   }
 
