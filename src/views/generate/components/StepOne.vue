@@ -107,8 +107,8 @@ function handleSearch() {
 }
 
 // 处理回车事件
-function handleKeyDown(e: KeyboardEvent) {
-  if (e.key === 'Enter') {
+function handleKeyDown(e: Event | KeyboardEvent) {
+  if (e instanceof KeyboardEvent && e.key === 'Enter') {
     handleSearch()
   }
 }

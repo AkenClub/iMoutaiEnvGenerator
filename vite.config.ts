@@ -1,13 +1,13 @@
 import path from 'node:path'
 import node from 'node:process'
 import vue from '@vitejs/plugin-vue'
+import { visualizer } from 'rollup-plugin-visualizer'
 import AutoImport from 'unplugin-auto-import/vite'
 import { FileSystemIconLoader } from 'unplugin-icons/loaders'
 import IconsResolver from 'unplugin-icons/resolver'
 import Icons from 'unplugin-icons/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 import Components from 'unplugin-vue-components/vite'
-
 import { defineConfig, loadEnv } from 'vite'
 
 const pathSrc = path.resolve(__dirname, 'src')
@@ -55,6 +55,13 @@ export default defineConfig(({ mode }) => {
 
     plugins: [
       vue(),
+      // 只在 VITE_ANALYZE 环境变量为 true 时才启用 visualizer
+      env.VITE_ANALYZE === 'true' && visualizer({
+        open: true,
+        filename: 'dist/stats.html',
+        gzipSize: true,
+        brotliSize: true,
+      }),
       // 自动导入 API，例如在 script 中就不用导入 ref，就能直接使用
       AutoImport({
         include: [
