@@ -1,256 +1,64 @@
 <script setup lang="ts">
-import type { ShopInfo } from '@/api/imaotai/shop'
-import { getProductInfo, getShopInfo } from '@/api/imaotai/shop'
-import { useImaotaiStore } from '@/stores/modules/imaotai'
-import StepFinal from './components/StepFinal.vue'
-import StepOne from './components/StepOne.vue'
-import StepThree from './components/StepThree.vue'
-import StepTwo from './components/StepTwo.vue'
+import { useRouter } from 'vue-router'
+import CommonHeader from '../../components/CommonHeader.vue'
 
-interface ProductItem {
-  itemCode: string
-  title: string
-}
+const router = useRouter()
 
-const shopList = ref<ShopInfo[]>([])
-const selectedShopId = ref<string>('')
-const productList = ref<ProductItem[]>([])
-const selectedProducts = ref<string[]>([])
-const loading = ref(false)
-const activeStep = ref(0)
-
-const imaotaiStore = useImaotaiStore()
-
-// 搜索商店
-async function handleSearchShops() {
-  try {
-    loading.value = true
-    shopList.value = await getShopInfo(imaotaiStore.state.province, imaotaiStore.state.city)
-    if (shopList.value.length === 0) {
-      ElMessage.warning('未找到相关商店')
-    }
-  }
-  catch (error: any) {
-    ElMessage.error(error.message)
-  }
-  finally {
-    loading.value = false
-  }
-}
-
-// 获取可预约商品
-async function handleGetProducts() {
-  if (!selectedShopId.value) {
-    ElMessage.warning('请先选择商店')
-    return
-  }
-
-  try {
-    loading.value = true
-    const result = await getProductInfo()
-    productList.value = result.itemList
-    if (productList.value.length === 0) {
-      ElMessage.warning('暂无可预约商品')
-    }
-  }
-  catch (error: any) {
-    ElMessage.error(error.message)
-  }
-  finally {
-    loading.value = false
-  }
-}
-
-// 下一步
-function handleNext() {
-  if (activeStep.value === 0 && (!selectedShopId.value || !imaotaiStore.state.shopMode)) {
-    ElMessage.warning('请选择商店和缺货模式')
-    return
-  }
-
-  // 添加商品选择验证
-  if (activeStep.value === 1 && selectedProducts.value.length === 0) {
-    ElMessage.warning('请至少选择一个商品')
-    return
-  }
-
-  activeStep.value++
-  if (activeStep.value === 1) {
-    handleGetProducts()
-  }
-}
-
-// 上一步
-function handlePrev() {
-  activeStep.value--
-  if (activeStep.value === 0) {
-    selectedProducts.value = []
-    productList.value = []
-  }
-}
-
-// 完成登录，进入最终步骤
-function handleComplete() {
-  // 检查是否已经登录成功
-  if (!imaotaiStore.state.token || !imaotaiStore.state.cookie) {
-    ElMessage.warning('请先完成手机号验证码登录，获取 TOKEN 和 COOKIE')
-    return
-  }
-
-  activeStep.value++
-}
-
-// 重新配置
-function handleReset() {
-  ElMessageBox.confirm(
-    '确定要重新配置吗？这将清除所有已填写的信息。',
-    '提示',
-    {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning',
-    },
-  ).then(() => {
-    window.location.reload()
-  })
+function handleNavigate(path: string) {
+  router.push(path)
 }
 </script>
 
 <template>
   <div class="h-screen p-4">
     <el-card class="flex flex-col h-full" body-style="overflow-y: auto;">
-      <!-- 卡片头部 -->
       <template #header>
-        <div class="flex items-center justify-between">
-          <div>
-            <div class="font-bold text-2xl">
-              ken-iMoutai-Script 项目环境变量生成助手
-            </div>
-            <div class="text-gray-500 mt-1 text-sm">
-              傻瓜式生成新的 KEN_IMAOTAI_ENV 环境变量，同时支持旧环境变量的更新。
-            </div>
-          </div>
-          <div class="flex items-center gap-8">
-            <a
-              href="https://github.com/AkenClub/iMoutaiEnvGenerator"
-              target="_blank"
-              class="text-gray-600 hover:text-gray-900"
-              title="查看本项目源码"
-            >
-              <el-icon class="text-4xl">
-                <IMineGithub />
-              </el-icon>
-              <span class="ml-1 text-sm">本生成助手源码</span>
-            </a>
-            <a
-              href="https://github.com/AkenClub/ken-iMoutai-Script#环境变量示例"
-              target="_blank"
-              class="text-gray-600 hover:text-gray-900"
-              title="查看配套 ken-iMoutai-Script 脚本项目源码"
-            >
-              <el-icon class="text-4xl">
-                <IMineGithub />
-              </el-icon>
-              <span class="ml-1 text-sm">ken-iMoutai-Script 源码</span>
-            </a>
-          </div>
-        </div>
-
-        <div class="mt-8">
-          <el-steps :active="activeStep" finish-status="success" class="mb-4" align-center>
-            <el-step title="选择商店" description="选择预约商店和缺货模式" />
-            <el-step title="选择商品" description="选择需要预约的商品" />
-            <el-step title="登录" description="获取登录验证码、Token等" />
-            <el-step title="完成" description="生成环境变量" />
-          </el-steps>
-        </div>
+        <CommonHeader />
       </template>
 
-      <!-- 步骤内容 -->
-      <StepOne
-        v-show="activeStep === 0"
-        v-model:selected-shop-id="selectedShopId"
-        :shop-list="shopList"
-        :loading="loading"
-        @search="handleSearchShops"
-      />
-
-      <StepTwo
-        v-show="activeStep === 1"
-        v-model:selected-products="selectedProducts"
-        :product-list="productList"
-      />
-
-      <StepThree
-        v-show="activeStep === 2"
-        v-model:loading="loading"
-      />
-
-      <StepFinal
-        v-show="activeStep === 3"
-      />
-
-      <!-- 卡片底部 -->
-      <template #footer>
-        <div class="flex justify-between">
-          <el-button
-            :disabled="activeStep === 0 || activeStep === 3"
-            @click="handlePrev"
-          >
-            上一步
-          </el-button>
-          <template v-if="activeStep === 3">
-            <el-button
-              type="warning"
-              @click="handleReset"
-            >
-              重新配置
-            </el-button>
+      <div class="flex-1 flex flex-col items-center justify-center gap-20 mt-20">
+        <el-card
+          class="w-96 cursor-pointer hover:shadow-lg transition-shadow h-[150px]"
+          @click="handleNavigate('/generate')"
+        >
+          <template #header>
+            <div class="font-bold flex items-center gap-2">
+              <span class="text-xl">🆕</span>
+              <span class="text-lg">生成新环境变量</span>
+            </div>
           </template>
-          <template v-else>
-            <el-button
-              v-if="activeStep < 2"
-              type="primary"
-              @click="handleNext"
-            >
-              下一步
-            </el-button>
-            <el-button
-              v-else-if="activeStep === 2"
-              type="success"
-              @click="handleComplete"
-            >
-              生成环境变量
-            </el-button>
+          <div class="text-gray-600 flex items-start gap-2">
+            <span>从零开始配置新的环境变量，包括选择商店、商品和登录信息等。</span>
+          </div>
+        </el-card>
+
+        <el-card
+          class="w-96 cursor-pointer hover:shadow-lg transition-shadow h-[150px]"
+          @click="handleNavigate('/update')"
+        >
+          <template #header>
+            <div class="font-bold flex items-center gap-2">
+              <span class="text-xl">⚡</span>
+              <span class="text-lg">更新已有环境变量</span>
+            </div>
           </template>
-        </div>
-      </template>
+          <div class="text-gray-600 flex items-start gap-2">
+            <span>导入并更新现有的环境变量，快速修改配置信息。</span>
+          </div>
+        </el-card>
+      </div>
     </el-card>
   </div>
 </template>
 
 <style scoped>
-.container {
-  max-width: 800px;
-}
-
 :deep(.el-card__body) {
   flex: 1;
   padding-bottom: 0;
   overflow: hidden;
 }
 
-:deep(.el-card__footer) {
-  padding-top: 12px;
-  border-top: 1px solid var(--el-border-color-light);
-}
-
 :deep(.el-card__header) {
-  padding-bottom: 0;
-}
-
-:deep(.el-icon) {
-  display: inline-flex;
-  align-items: center;
+  padding-bottom: 16px;
 }
 </style>

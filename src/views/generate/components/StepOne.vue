@@ -105,6 +105,13 @@ function handleSearch() {
 
   emit('search')
 }
+
+// 处理回车事件
+function handleKeyDown(e: KeyboardEvent) {
+  if (e.key === 'Enter') {
+    handleSearch()
+  }
+}
 </script>
 
 <template>
@@ -115,12 +122,14 @@ function handleSearch() {
           <el-input
             v-model="imaotaiStore.state.province"
             placeholder="请输入省份，例如：广东省"
+            @keydown="handleKeyDown"
           />
         </el-form-item>
         <el-form-item label="城市" class="flex-1 !mb-0">
           <el-input
             v-model="imaotaiStore.state.city"
             placeholder="请输入城市，例如：深圳市"
+            @keydown="handleKeyDown"
           />
         </el-form-item>
         <el-form-item class="!mb-0">
