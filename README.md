@@ -12,6 +12,7 @@ iMoutaiEnvGenerator 是一个专为 [ken-iMoutai-Script](https://github.com/Aken
 - **实时生成**：根据用户输入动态生成 `KEN_IMAOTAI_ENV` 环境变量字符串。
 - **一键复制**：支持一键复制生成的环境变量到剪贴板。
 - **用户友好**：提供清晰的使用步骤和脚本说明。
+- **历史记录**：支持保存和更新历史环境变量记录。
 
 ## 使用截图
 
