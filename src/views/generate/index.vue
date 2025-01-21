@@ -140,7 +140,7 @@ watch(activeStep, (newValue) => {
           <el-steps :active="activeStep" finish-status="success" class="mb-4" align-center>
             <el-step title="选择商店" description="选择预约商店和缺货模式" />
             <el-step title="选择商品" description="选择需要预约的商品" />
-            <el-step title="登录" description="获取登录验证码、Token等" />
+            <el-step title="登录" description="获取验证码、Token等" />
             <el-step title="完成" description="生成环境变量" />
           </el-steps>
         </div>

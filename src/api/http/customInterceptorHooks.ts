@@ -1,6 +1,6 @@
 import type { ExpandAxiosResponse, InterceptorHooks } from '@/utils/axios/types'
 import { axiosRequest } from '@/api/http/index'
-import { useUserStoreHook } from '@/stores/modules/user'
+import { useUserStore } from '@/stores/modules/user'
 import NProgress from '@/utils/progress'
 
 // 与后端约定的请求成功码
@@ -36,7 +36,7 @@ export function customInterceptorHooks(): InterceptorHooks {
       if (res.data.code && res.data.code === 403) {
         if (!axiosRequest.isRefreshingToken) {
           axiosRequest.isRefreshingToken = true
-          useUserStoreHook()
+          useUserStore()
             .refreshCookie()
             .then(() => {
               console.log('刷新 cookie')

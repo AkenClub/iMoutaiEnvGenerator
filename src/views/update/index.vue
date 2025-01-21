@@ -1,8 +1,17 @@
 <script setup lang="ts">
 import { login, sendVerifyCode } from '@/api/imaotai/user'
 import CommonHeader from '@/components/CommonHeader.vue'
+import { useUserStore } from '@/stores/modules/user'
 import { Check, Timer } from '@element-plus/icons-vue'
-import { computed, onUnmounted, ref } from 'vue'
+import dayjs from 'dayjs'
+import { v4 as uuidv4 } from 'uuid'
+import { computed, onUnmounted, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
+
+interface UserEnv extends ImaotaiState {
+  id: number
+  loginSuccess?: boolean
+}
 
 const envInput = ref('')
 const isValidJson = ref(true)
@@ -13,24 +22,6 @@ const verifyCode = ref('')
 const countdown = ref(0)
 const countdownTimer = ref<number | null>(null)
 
-interface UserEnv {
-  id: number
-  phoneNumber: string
-  userId: string
-  deviceId: string
-  mtVersion: string
-  productIdList: string
-  shopId: string
-  shopMode: string
-  province: string
-  city: string
-  lat: string
-  lng: string
-  token: string
-  cookie: string
-  loginSuccess?: boolean
-}
-
 // 存储多个用户的环境变量
 const users = ref<UserEnv[]>([])
 // 当前选中的用户
@@ -38,6 +29,38 @@ const currentUser = ref<UserEnv | null>(null)
 
 // 导入状态
 const isImported = ref(false)
+
+// 添加新的响应式变量
+const userStore = useUserStore()
+const saveDialogVisible = ref(false)
+const saveName = ref('')
+
+// 添加路由相关代码
+const route = useRoute()
+
+// 添加新的响应式变量
+const currentHistoryUuid = ref('')
+
+// 监听路由参数变化
+watch(
+  () => route.query,
+  (query) => {
+    if (query.uuid && typeof query.uuid === 'string') {
+      // 通过 uuid 获取历史记录
+      const historyItem = userStore.getHistoryByUuid(query.uuid)
+      if (historyItem) {
+        currentHistoryUuid.value = query.uuid
+        envInput.value = historyItem.env
+        handleImportEnv()
+      }
+    }
+    else if (query.env && typeof query.env === 'string') {
+      envInput.value = query.env
+      handleImportEnv()
+    }
+  },
+  { immediate: true },
+)
 
 // 解析并导入环境变量
 function handleImportEnv() {
@@ -238,13 +261,90 @@ function handleReset() {
     // 用户取消重置，不做任何操作
   })
 }
+
+// 添加新的方法
+function handleSave() {
+  // 设置默认名称
+  saveName.value = `${dayjs().format('YYYY-MM-DD HH:mm:ss')}`
+  saveDialogVisible.value = true
+}
+
+function confirmSave() {
+  if (!saveName.value.trim()) {
+    ElMessage.warning('请输入保存名称')
+    return
+  }
+
+  // 保存所有更新后的用户环境变量
+  userStore.saveEnv({
+    env: generateNewEnv.value,
+    date: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+    remark: saveName.value,
+    type: 'update',
+    uuid: uuidv4(),
+  })
+
+  saveDialogVisible.value = false
+  saveName.value = ''
+  ElMessage.success('保存成功')
+}
+
+// 更新历史记录
+function handleUpdateHistory() {
+  if (!currentHistoryUuid.value)
+    return
+
+  const historyItem = userStore.getHistoryByUuid(currentHistoryUuid.value)
+  if (!historyItem)
+    return
+
+  ElMessageBox.confirm(
+    `确定要更新"${historyItem.remark}"的环境变量吗？`,
+    '更新确认',
+    {
+      confirmButtonText: '确定更新',
+      cancelButtonText: '取消',
+      type: 'warning',
+    },
+  ).then(() => {
+    userStore.updateEnv(currentHistoryUuid.value, {
+      env: generateNewEnv.value,
+    })
+    ElMessage.success('更新成功')
+  }).catch(() => {
+    // 用户取消更新，不做任何操作
+  })
+}
+
+// 添加计算属性获取当前历史记录
+const currentHistory = computed(() => {
+  if (!currentHistoryUuid.value)
+    return null
+  return userStore.sortedHistoryEnvList.find(item => item.uuid === currentHistoryUuid.value)
+})
+
+// 计算标题
+const pageTitle = computed(() => {
+  if (currentHistory.value) {
+    return `更新 - ${currentHistory.value.remark}`
+  }
+  return '更新已有环境变量'
+})
+
+// 计算描述
+const pageDescription = computed(() => {
+  if (currentHistory.value) {
+    return `保存时间：${currentHistory.value.date}`
+  }
+  return '导入并更新现有的环境变量，快速修改配置信息。'
+})
 </script>
 
 <template>
   <div class="h-screen p-4">
     <el-card class="flex flex-col h-full max-w-[940px] mx-auto" body-style="overflow-y: auto;">
       <template #header>
-        <CommonHeader title="更新已有环境变量" description="导入并更新现有的环境变量，快速修改配置信息。" />
+        <CommonHeader :title="pageTitle" :description="pageDescription" />
       </template>
 
       <div class="flex-1 flex flex-col gap-6 p-4">
@@ -509,8 +609,62 @@ function handleReset() {
             >
               复制环境变量
             </el-button>
+
+            <!-- 根据是否有 uuid 显示不同的按钮 -->
+            <template v-if="currentHistoryUuid">
+              <el-button
+                type="warning"
+                class="mt-4 w-full !ml-0"
+                @click="handleUpdateHistory"
+              >
+                更新此历史记录
+              </el-button>
+              <el-button
+                type="primary"
+                class="mt-4 w-full !ml-0"
+                @click="handleSave"
+              >
+                另存为新记录
+              </el-button>
+            </template>
+            <template v-else>
+              <el-button
+                type="primary"
+                class="mt-4 w-full !ml-0"
+                @click="handleSave"
+              >
+                保存到历史记录
+              </el-button>
+            </template>
           </div>
         </template>
+
+        <!-- 添加保存对话框 -->
+        <el-dialog
+          v-model="saveDialogVisible"
+          title="保存环境变量"
+          width="400px"
+        >
+          <el-form>
+            <el-form-item label="保存名称">
+              <el-input
+                v-model="saveName"
+                placeholder="请输入保存名称"
+                maxlength="50"
+                show-word-limit
+                clearable
+              />
+            </el-form-item>
+          </el-form>
+          <template #footer>
+            <span class="dialog-footer">
+              <el-button @click="saveDialogVisible = false">取消</el-button>
+              <el-button type="primary" @click="confirmSave">
+                确认保存
+              </el-button>
+            </span>
+          </template>
+        </el-dialog>
       </div>
     </el-card>
   </div>

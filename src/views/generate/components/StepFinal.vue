@@ -1,8 +1,12 @@
 <script setup lang="ts">
 import { useImaotaiStore } from '@/stores/modules/imaotai'
+import { useUserStore } from '@/stores/modules/user'
+import dayjs from 'dayjs'
+import { v4 as uuidv4 } from 'uuid'
 import { computed, reactive, ref, watch } from 'vue'
 
 const imaotaiStore = useImaotaiStore()
+const userStore = useUserStore()
 
 const ENV_NAME = 'KEN_IMAOTAI_ENV'
 const envValue = computed(() => imaotaiStore.generateEnvString())
@@ -23,6 +27,10 @@ watch(envValue, (newValue) => {
   editingValue.value = newValue
 }, { immediate: true })
 
+// 添加保存相关的变量
+const saveDialogVisible = ref(false)
+const saveName = ref('')
+
 // 复制文本
 function copyText(text: string) {
   navigator.clipboard.writeText(text).then(() => {
@@ -30,6 +38,33 @@ function copyText(text: string) {
   }).catch(() => {
     ElMessage.error('复制失败')
   })
+}
+
+// 添加保存相关的方法
+function handleSave() {
+  // 设置默认名称
+  saveName.value = `${dayjs().format('YYYY-MM-DD HH:mm:ss')}`
+  saveDialogVisible.value = true
+}
+
+function confirmSave() {
+  if (!saveName.value.trim()) {
+    ElMessage.warning('请输入保存名称')
+    return
+  }
+
+  // 保存环境变量
+  userStore.saveEnv({
+    env: envValue.value,
+    date: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+    remark: saveName.value,
+    type: 'add',
+    uuid: uuidv4(),
+  })
+
+  saveDialogVisible.value = false
+  saveName.value = ''
+  ElMessage.success('保存成功')
 }
 </script>
 
@@ -115,6 +150,14 @@ function copyText(text: string) {
       >
         复制
       </el-button>
+      <el-button
+        type="primary"
+        class="mt-4 w-full !ml-0"
+        :disabled="!editingValue"
+        @click="handleSave"
+      >
+        保存到历史记录
+      </el-button>
     </div>
 
     <!-- 预览信息 -->
@@ -148,6 +191,33 @@ function copyText(text: string) {
         </div>
       </div>
     </div>
+
+    <!-- 添加保存对话框 -->
+    <el-dialog
+      v-model="saveDialogVisible"
+      title="保存环境变量"
+      width="400px"
+    >
+      <el-form>
+        <el-form-item label="保存名称">
+          <el-input
+            v-model="saveName"
+            placeholder="请输入保存名称"
+            maxlength="50"
+            show-word-limit
+            clearable
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="saveDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="confirmSave">
+            确认保存
+          </el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 

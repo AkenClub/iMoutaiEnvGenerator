@@ -7,7 +7,7 @@ import { reactive } from 'vue'
 // 解释：手机号码#用户ID#设备ID#版本号#商品ID列表#店铺ID店铺缺货时自动采用的模式^省份^城市#纬度#经度#TOKEN#COOKIE
 // 多个用户时使用 & 连接。
 
-interface ImaotaiState {
+export interface ImaotaiState {
   phoneNumber: string
   userId: string
   deviceId: string
