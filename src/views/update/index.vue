@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { ImaotaiState } from '@/stores/modules/imaotai.ts'
 import { login, sendVerifyCode } from '@/api/imaotai/user'
 import CommonHeader from '@/components/CommonHeader.vue'
 import { useUserStore } from '@/stores/modules/user'

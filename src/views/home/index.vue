@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useUserStore } from '@/stores/modules/user'
+import { type UserEnvHistory, useUserStore } from '@/stores/modules/user'
 import dayjs from 'dayjs'
 import { ElMessage } from 'element-plus'
 import { ref } from 'vue'
