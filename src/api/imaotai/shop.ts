@@ -49,7 +49,8 @@ const MT_SHOP_STATIC_API_PREFIX = import.meta.env.VITE_MT_SHOP_STATIC_API_PREFIX
  */
 export async function getProductInfo() {
   try {
-    const timestamp = String(Math.floor(new Date().setHours(0, 0, 0, 0)))
+    const nowDate = Number.parseInt((new Date().getTime() / 1000).toString())
+    const timestamp = (nowDate - (nowDate % 86400) - 3600 * 8) * 1000
     const response = await axiosRequest.get<ProductResponse>(
       `${MT_SHOP_STATIC_API_PREFIX}/mt-backend/xhr/front/mall/index/session/get/${timestamp}`,
     )
