@@ -83,6 +83,101 @@ docker run -d --name imaotai-env-generator -p 12999:12999 imaotai-env-generator
      - 也可自行使用 node 启动项目，入口文件为 `server/app.js`。先执行打包命令 `yarn build`，生成 `dist` 目录，然后执行 `node server/app.js` 启动项目。
      - 此警告不会影响程序正常运行，可以忽略，但是为了避免在茅台 APP 接口中出现浏览器的 UA，建议在 `server/app.js` 中设置 User-Agent。
 
+## CloudFlare 部署方式
+
+<details>
+<summary>
+点击展开
+</summary>
+
+本项目可以方便地部署到 Cloudflare Pages，利用其全球 CDN 和 Serverless Functions (用于 API 代理)。
+
+### 部署步骤
+
+1.  **代码准备**:
+
+    - 确保您的代码已推送到 GitHub 或 GitLab 仓库。
+    - 项目中已包含 `functions` 目录，其中包含用于 API 代理的 Cloudflare Pages Functions (`functions/appleapi/[[path]].js`, `functions/mtstaticapi/[[path]].js`, `functions/mtappapi/[[path]].js`)。
+
+2.  **在 Cloudflare Pages 中创建项目**:
+
+    - 登录到您的 Cloudflare 仪表板。
+    - 导航到 "Workers & Pages"。
+    - 点击 "Create application"，然后选择 "Pages" 标签页。
+    - 选择 "Connect to Git"，并授权 Cloudflare 访问您的代码仓库。
+    - 选择您要部署的仓库和生产分支 (例如 `main`)。
+
+3.  **配置构建设置**:
+
+    - **Framework preset**: Cloudflare Pages 通常会自动检测到 "Vite"。如果未检测到，请手动选择它。
+    - **Build command**: 设置为 `yarn build` (或 `npm run build`，根据您的习惯)。
+    - **Build output directory**: 确保设置为 `dist`。
+    - **Root directory**: 保持默认或根据您的项目结构设置 (通常是仓库根目录)。
+    - **Environment variables (重要)**:
+      - 点击 "Environment variables" (在 "Build & deployments" 设置下) 添加以下生产环境变量，这些变量供 `functions` 目录下的代理函数使用：
+        - `VITE_APP_STORE_URL`: `https://apps.apple.com`
+        - `VITE_MT_SHOP_STATIC_URL`: `https://static.moutai519.com.cn`
+        - `VITE_MT_APP_API_URL`: `https://app.moutai519.com.cn`
+
+4.  **保存并部署**:
+    - 点击 "Save and Deploy"。Cloudflare Pages 将拉取代码，执行构建命令，并将 `dist` 目录的内容和 `functions` 目录下的函数部署到其全球网络。
+    - 部署完成后，您会得到一个 `*.pages.dev` 的子域名。您也可以后续配置自定义域名。
+    - 您的 API 请求 (例如 `/appleapi/...`) 将会自动被路由到相应的 Pages Function 进行代理。
+
+### 本地开发和调试 (使用 Wrangler)
+
+Cloudflare Wrangler CLI 允许您在本地模拟 Cloudflare Pages 环境，包括静态资源服务和 Functions。
+
+1.  **安装 Wrangler (如果尚未安装)**:
+
+    - 推荐使用 npx (无需全局安装): `npx wrangler ...`
+    - 或全局安装: `npm install -g wrangler` / `yarn global add wrangler`
+
+2.  **准备本地环境变量**:
+
+    - 在项目根目录创建一个 `.dev.vars` 文件 (如果不存在)。
+    - 添加本地开发时 Functions 需要的环境变量。此文件**不应**提交到 Git。
+      ```ini
+      # .dev.vars
+      VITE_APP_STORE_URL="https://apps.apple.com"
+      VITE_MT_SHOP_STATIC_URL="https://static.moutai519.com.cn"
+      VITE_MT_APP_API_URL="https://app.moutai519.com.cn"
+      # NODE_VERSION="22" # 如果本地测试也需要特定版本
+      ```
+    - 确保 `.dev.vars` 已被添加到 `.gitignore` 文件中。
+
+3.  **Wrangler 配置文件 (`wrangler.toml`)**:
+
+    - 项目中应包含一个 `wrangler.toml` 文件，基本配置如下：
+      ```toml
+      name = "imaotai-env-generator" # 与 Cloudflare Pages 项目名称一致
+      compatibility_date = "2024-03-15" # 使用一个较新的日期
+      pages_build_output_dir = "dist"
+      ```
+    - 此文件指导 Wrangler 如何在本地运行您的 Pages 项目。
+
+4.  **本地调试流程**:
+
+    - **方式一: 纯前端开发 (Vite Dev Server)**
+
+      - 运行: `yarn dev` (或 `npm run dev`)
+      - Vite 开发服务器将启动，提供热模块替换 (HMR)。API 请求将通过 `vite.config.ts` 中的 `server.proxy` 配置进行代理。
+      - **注意**: 此模式不执行 `functions/` 目录下的 Cloudflare Pages Functions。
+
+    - **方式二: 完整 Pages 环境模拟 (Wrangler)**
+      1.  **构建前端**: `yarn build` (或 `npm run build`)，生成 `dist/` 目录。
+      2.  **启动 Wrangler**: `npx wrangler pages dev`
+          - Wrangler 会从 `dist` 目录提供静态文件，并运行 `functions/` 目录下的 Functions。
+          - 环境变量将从 `.dev.vars` 文件加载。
+          - 通常服务会运行在 `http://localhost:8788`。
+      3.  在浏览器中访问 Wrangler 提供的地址进行测试。API 调用将由本地运行的 Pages Functions 处理。
+
+### 注意事项
+
+- 部署到 Cloudflare Pages 后，原先项目中的 `server/` 目录 (包含 `app.js` 和 `package.json`) 和 `Dockerfile` 将不再需要，因为其功能已被 Cloudflare Pages 的静态资源服务和 Pages Functions 替代。
+- `vite.config.ts` 中的 `server.proxy` 配置仅用于本地 Vite 开发服务器，不影响 Cloudflare Pages 的生产部署。
+</details>
+
 ## 免责声明
 
 本项目涉及抓取接口数据，仅用于学习和交流目的。请注意以下几点：

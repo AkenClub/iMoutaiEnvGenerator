@@ -1,0 +1,6 @@
+name = "imaotai-env-generator" # 您可以根据 Cloudflare 上的项目名调整
+compatibility_date = "2025-05-30" # 建议使用较新的日期，例如今天或您开始使用 Wrangler 的日期
+pages_build_output_dir = "dist"
+
+# 如果您的 Functions 依赖 Node.js 特定 API，可以取消注释并设置
+# node_compat = true
