@@ -109,15 +109,11 @@ docker run -d --name imaotai-env-generator -p 12999:12999 imaotai-env-generator
 
 3.  **配置构建设置**:
 
-    - **Framework preset**: Cloudflare Pages 通常会自动检测到 "Vite"。如果未检测到，请手动选择它。
+    - **Framework preset**: 选择 `无`。
     - **Build command**: 设置为 `yarn build` (或 `npm run build`，根据您的习惯)。
     - **Build output directory**: 确保设置为 `dist`。
     - **Root directory**: 保持默认或根据您的项目结构设置 (通常是仓库根目录)。
-    - **Environment variables (重要)**:
-      - 点击 "Environment variables" (在 "Build & deployments" 设置下) 添加以下生产环境变量，这些变量供 `functions` 目录下的代理函数使用：
-        - `VITE_APP_STORE_URL`: `https://apps.apple.com`
-        - `VITE_MT_SHOP_STATIC_URL`: `https://static.moutai519.com.cn`
-        - `VITE_MT_APP_API_URL`: `https://app.moutai519.com.cn`
+    - **注意**: 如果您的 Cloudflare Pages 项目面板提示非机密环境变量通过 `wrangler.toml` 文件进行管理，请确保在项目根目录的 `wrangler.toml` 文件中定义这些变量 (参考下方"Wrangler 配置文件"部分)。机密变量（Secrets）仍应通过 Cloudflare 仪表板管理。
 
 4.  **保存并部署**:
     - 点击 "Save and Deploy"。Cloudflare Pages 将拉取代码，执行构建命令，并将 `dist` 目录的内容和 `functions` 目录下的函数部署到其全球网络。
@@ -149,12 +145,24 @@ Cloudflare Wrangler CLI 允许您在本地模拟 Cloudflare Pages 环境，包�
 3.  **Wrangler 配置文件 (`wrangler.toml`)**:
 
     - 项目中应包含一个 `wrangler.toml` 文件，基本配置如下：
+
       ```toml
       name = "imaotai-env-generator" # 与 Cloudflare Pages 项目名称一致
-      compatibility_date = "2024-03-15" # 使用一个较新的日期
+      compatibility_date = "2025-05-05" # 使用一个较新的日期
       pages_build_output_dir = "dist"
+
+      # 定义环境变量，供 Pages Functions 在本地开发和生产环境中使用
+      # 如果 Cloudflare Pages 面板指示环境变量由 wrangler.toml 管理，
+      # 这里的 [vars] 部分将用于生产部署。
+      [vars]
+      VITE_APP_STORE_URL = "https://apps.apple.com"
+      VITE_MT_SHOP_STATIC_URL = "https://static.moutai519.com.cn"
+      VITE_MT_APP_API_URL = "https://app.moutai519.com.cn"
+      # NODE_VERSION = "18" # 如果您的 Functions 需要特定 Node.js 版本 (示例)
       ```
-    - 此文件指导 Wrangler 如何在本地运行您的 Pages 项目。
+
+    - 此文件指导 Wrangler 如何在本地运行您的 Pages 项目。如果 Cloudflare 指示，此文件中的 `[vars]` 也会用于生产环境的变量配置。
+    - **重要**: 如果您在 `wrangler.toml` 中定义了这些变量，请确保将此文件提交到您的 Git 仓库，以便 Cloudflare Pages 在部署时能够读取这些配置。
 
 4.  **本地调试流程**:
 
