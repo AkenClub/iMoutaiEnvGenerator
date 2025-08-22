@@ -37,15 +37,11 @@ export async function sendVerifyCode(mobile: string, deviceId: string, mtVersion
     'Content-Type': 'application/json',
   }
 
-  const response = await axiosRequest.post<SendCodeResponse>(
+  await axiosRequest.post<SendCodeResponse>(
     `${MT_APP_API_PREFIX}/xhr/front/user/register/vcode`,
     data,
     { headers },
   )
-
-  if (response.code !== 2000) {
-    throw new Error(response.message || '发送验证码失败')
-  }
 }
 
 /**

@@ -77,13 +77,14 @@ export function customInterceptorHooks(): InterceptorHooks {
       // 关闭进度条动画
       NProgress.done()
 
-      // 这里用来处理 http 常见错误，进行全局提示
+      // 统一处理所有错误码
       const mapErrorStatus = new Map([
         [400, '请求方式错误'],
         [401, '请重新登录'],
         [403, '拒绝访问'],
         [404, '请求地址有误'],
         [500, '服务器出错'],
+        [482, '请更新应用版本号后重试'],
       ])
       const message = (err.response && mapErrorStatus.get(err.response.status)) || err.response?.data?.message || '请求出错，请稍后再试'
       if (err.config.requestOptions?.globalErrorMessage) {

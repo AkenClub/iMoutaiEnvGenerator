@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import type { ImaotaiState } from '@/stores/modules/imaotai.ts'
 import { login, sendVerifyCode } from '@/api/imaotai/user'
+import { getMtAppVersion } from '@/api/other/apple.ts'
 import CommonHeader from '@/components/CommonHeader.vue'
 import { useUserStore } from '@/stores/modules/user'
-import { Check, Timer } from '@element-plus/icons-vue'
+import { Check, Refresh, Timer } from '@element-plus/icons-vue'
 import dayjs from 'dayjs'
 import { v4 as uuidv4 } from 'uuid'
 import { computed, onUnmounted, ref, watch } from 'vue'
@@ -41,6 +42,11 @@ const route = useRoute()
 
 // 添加新的响应式变量
 const currentHistoryUuid = ref('')
+
+// 版本号相关
+const latestVersion = ref('')
+const versionUpdateLoading = ref(false)
+const showVersionUpdate = ref(false)
 
 // 监听路由参数变化
 watch(
@@ -105,6 +111,7 @@ function handleImportEnv() {
     isValidJson.value = true
     errorMessage.value = ''
     showLoginForm.value = true
+    showVersionUpdate.value = true // 显示版本更新选项
     isImported.value = true
     ElMessage.success(`成功解析 ${users.value.length} 个用户的环境变量`)
   }
@@ -113,6 +120,7 @@ function handleImportEnv() {
     isValidJson.value = false
     errorMessage.value = error.message || '环境变量格式不正确，请检查格式'
     showLoginForm.value = false
+    showVersionUpdate.value = false
   }
 }
 
@@ -139,6 +147,50 @@ function startCountdown() {
   }, 1000)
 }
 
+// 获取最新版本号
+async function fetchLatestVersion() {
+  try {
+    versionUpdateLoading.value = true
+    latestVersion.value = await getMtAppVersion()
+    ElMessage.success('获取最新版本号成功')
+  }
+  catch (error: any) {
+    console.error('获取版本号失败', error)
+    ElMessage.error(`获取版本号失败：${error.message}`)
+  }
+  finally {
+    versionUpdateLoading.value = false
+  }
+}
+
+// 更新所有用户的版本号
+function updateAllUsersVersion() {
+  if (!latestVersion.value) {
+    ElMessage.warning('请先获取最新版本号')
+    return
+  }
+
+  ElMessageBox.confirm(
+    `确定要将所有用户的版本号更新为 ${latestVersion.value} 吗？`,
+    '更新版本号确认',
+    {
+      confirmButtonText: '确定更新',
+      cancelButtonText: '取消',
+      type: 'info',
+    },
+  ).then(() => {
+    const oldVersions = [...new Set(users.value.map(user => user.mtVersion))]
+
+    users.value.forEach((user) => {
+      user.mtVersion = latestVersion.value
+    })
+
+    ElMessage.success(`已更新所有用户版本号：${oldVersions.join(', ')} → ${latestVersion.value}`)
+  }).catch(() => {
+    // 用户取消更新，不做任何操作
+  })
+}
+
 // 发送验证码
 async function handleSendCode() {
   if (!currentUser.value) {
@@ -151,13 +203,13 @@ async function handleSendCode() {
     await sendVerifyCode(
       currentUser.value.phoneNumber,
       currentUser.value.deviceId,
-      currentUser.value.mtVersion,
+      currentUser.value.mtVersion, // 使用已更新的版本号
     )
     startCountdown()
     ElMessage.success('验证码发送成功，请注意查收')
   }
   catch (error: any) {
-    ElMessage.error(error.message)
+    console.error('发送验证码失败', error)
   }
   finally {
     loading.value = false
@@ -246,11 +298,14 @@ function handleReset() {
     isValidJson.value = true
     errorMessage.value = ''
     showLoginForm.value = false
+    showVersionUpdate.value = false
     verifyCode.value = ''
     countdown.value = 0
     users.value = []
     currentUser.value = null
     isImported.value = false
+    latestVersion.value = ''
+    versionUpdateLoading.value = false
 
     if (countdownTimer.value) {
       clearInterval(countdownTimer.value)
@@ -388,6 +443,80 @@ const pageDescription = computed(() => {
           </div>
         </div>
 
+        <!-- 版本号更新 -->
+        <template v-if="showVersionUpdate">
+          <div class="mb-4">
+            <h3 class="text-lg font-medium mb-2">
+              第二步：更新应用版本号（可选）
+            </h3>
+            <p class="text-gray-500 text-sm mb-4">
+              获取茅台app最新版本号并更新到环境变量中，确保使用最新版本进行验证码发送和登录。
+              <br>
+              <span class="text-orange-500 text-sm">
+                如果发送验证码失败，显示“请更新应用版本号后重试”，则需要更新版本号。
+              </span>
+            </p>
+
+            <div class="bg-gray-50 p-4 rounded space-y-4">
+              <!-- 当前版本号 -->
+              <div>
+                <div class="font-medium mb-2 text-gray-600">
+                  当前版本号：
+                </div>
+                <div class="space-y-2">
+                  <template v-for="user in users" :key="user.id">
+                    <div class="flex items-center gap-2">
+                      <span class="text-sm text-gray-500">用户{{ user.id }}</span>
+                      <span class="text-xs text-gray-400">({{ user.phoneNumber }})：</span>
+                      <el-tag type="info" size="small">
+                        {{ user.mtVersion }}
+                      </el-tag>
+                    </div>
+                  </template>
+                </div>
+              </div>
+
+              <!-- 最新版本号 -->
+              <div v-if="latestVersion">
+                <div class="font-medium mb-2 text-gray-600">
+                  最新版本号：
+                </div>
+                <el-tag type="success">
+                  {{ latestVersion }}
+                </el-tag>
+              </div>
+
+              <!-- 操作按钮 -->
+              <div class="flex items-center gap-3">
+                <el-button
+                  type="primary"
+                  :loading="versionUpdateLoading"
+                  :icon="Refresh"
+                  @click="fetchLatestVersion"
+                >
+                  {{ versionUpdateLoading ? '获取中...' : '获取最新版本号' }}
+                </el-button>
+
+                <el-button
+                  v-if="latestVersion"
+                  type="success"
+                  :disabled="[...new Set(users.map(u => u.mtVersion))].includes(latestVersion)"
+                  @click="updateAllUsersVersion"
+                >
+                  {{ [...new Set(users.map(u => u.mtVersion))].includes(latestVersion) ? '版本已是最新' : '更新所有用户版本号' }}
+                </el-button>
+              </div>
+
+              <div v-if="latestVersion && ![...new Set(users.map(u => u.mtVersion))].includes(latestVersion)" class="text-orange-600 text-sm">
+                <el-icon class="mr-1">
+                  <Timer />
+                </el-icon>
+                检测到新版本，建议更新版本号后再进行登录操作
+              </div>
+            </div>
+          </div>
+        </template>
+
         <!-- 环境变量信息预览 -->
         <template v-if="showLoginForm">
           <div class="mb-4">
@@ -472,7 +601,7 @@ const pageDescription = computed(() => {
           <!-- 登录表单 -->
           <div class="mb-4">
             <h3 class="text-lg font-medium mb-2">
-              第二步：重新登录获取 Token
+              第三步：重新登录获取 Token
             </h3>
             <p class="text-gray-500 text-sm mb-4">
               请依次为每个用户重新登录，更新 Token 和 Cookie
@@ -572,7 +701,7 @@ const pageDescription = computed(() => {
           <div v-if="users.some(user => user.loginSuccess)" class="mb-4">
             <div class="flex items-center mb-2">
               <h3 class="text-lg font-medium">
-                第三步：复制更新后的环境变量
+                第四步：复制更新后的环境变量
               </h3>
             </div>
 

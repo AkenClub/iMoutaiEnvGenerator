@@ -102,6 +102,7 @@ async function handleSendCode() {
     handleSendCodeSuccess()
   }
   catch (error: any) {
+    console.error('发送验证码失败', error)
     ElMessage.error(error.message)
   }
   finally {
