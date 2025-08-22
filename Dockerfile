@@ -2,6 +2,9 @@
 FROM node:18-alpine AS frontend-builder
 WORKDIR /src
 
+# 启用 Corepack 来管理包管理器版本
+RUN corepack enable
+
 # 使用 mount 来缓存前端依赖
 COPY package.json yarn.lock ./
 RUN --mount=type=cache,target=/usr/local/share/.cache/yarn \
@@ -15,6 +18,10 @@ RUN --mount=type=cache,target=/usr/local/share/.cache/yarn \
 # 服务端依赖阶段
 FROM node:18-alpine AS backend-deps
 WORKDIR /app/server
+
+# 启用 Corepack 来管理包管理器版本
+RUN corepack enable
+
 COPY server/package.json ./
 
 # 只安装服务端依赖
