@@ -1,3 +1,4 @@
+import { accessSync, readdirSync } from 'node:fs'
 import path from 'node:path'
 import node from 'node:process'
 import vue from '@vitejs/plugin-vue'
@@ -18,7 +19,28 @@ export default defineConfig(({ mode }) => {
   console.log('运行环境:', env)
   const isProdMode = mode === 'production'
 
+  // 预加载 element-plus 组件样式，避免开发环境重复加载
+  const optimizeDepsIncludes: string[] = []
+  if (!isProdMode) {
+    // 预加载element-plus
+    readdirSync('node_modules/element-plus/es/components').forEach((dirname) => {
+      try {
+        // 同步检查文件是否存在，如果存在则添加到优化列表。这里不能使用异步，否则不会生效
+        accessSync(`node_modules/element-plus/es/components/${dirname}/style/css.mjs`)
+        optimizeDepsIncludes.push(`element-plus/es/components/${dirname}/style/css`)
+        optimizeDepsIncludes.push(`element-plus/es/components/${dirname}/style/index`)
+      }
+      catch {
+        // 文件不存在，跳过
+      }
+    })
+  }
+
   return {
+    optimizeDeps: {
+      include: optimizeDepsIncludes,
+    },
+
     server: {
       port: 12999,
       open: false,
