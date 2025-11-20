@@ -1,11 +1,16 @@
+import path from 'node:path'
 import process from 'node:process'
+import { fileURLToPath } from 'node:url'
 import express from 'express'
 import { createProxyMiddleware } from 'http-proxy-middleware'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const distPath = path.join(__dirname, '../dist')
 
 const app = express()
 
 // 添加静态文件服务
-app.use(express.static('dist'))
+app.use(express.static(distPath))
 
 // 环境变量
 const env = {
@@ -53,6 +58,11 @@ app.use(
       path.replace(new RegExp(`^${env.VITE_MT_APP_API_PREFIX}`), ''),
   }),
 )
+
+// 处理 SPA 路由，所有未匹配的请求都返回 index.html
+app.get('*', (_, res) => {
+  res.sendFile(path.join(distPath, 'index.html'))
+})
 
 // 启动服务器
 const PORT = process.env.PORT || 12999
